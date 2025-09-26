@@ -49,4 +49,4 @@ See [`.env.example`](./.env.example) for defaults:
 
 - All IP addresses are hashed with a secret salt before logging.
 - Only basic device information is collected; no invasive fingerprinting techniques are used.
-- Server-side request metadata is logged on every hit for standard operational monito
+- Server-side request metadata is logged on every hit for standard operational monitoring.
