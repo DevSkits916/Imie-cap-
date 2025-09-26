@@ -1,0 +1,21 @@
+{
+  "name": "device-logger",
+  "version": "1.0.0",
+  "description": "Minimal Express application that logs visit metadata and client-provided device details.",
+  "main": "src/server.js",
+  "type": "module",
+  "scripts": {
+    "start": "node src/server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "compression": "^1.7.4",
+    "express": "^4.19.2",
+    "express-rate-limit": "^7.0.0",
+    "helmet": "^7.0.0",
+    "ua-parser-js": "^1.0.37",
+    "zod": "^3.22.4"
+  }
+}
