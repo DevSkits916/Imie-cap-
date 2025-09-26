@@ -206,6 +206,56 @@ function selectHeaders(headers) {
   }, {});
 }
 
+function indentBlock(text, spaces = 2) {
+  const indent = ' '.repeat(spaces);
+  return text
+    .split('\n')
+    .map((line) => indent + line)
+    .join('\n');
+}
+
+function formatTextLogEntry(entry) {
+  const {
+    timestamp,
+    method,
+    path: requestPath,
+    hashedIp,
+    headers,
+    userAgent,
+    event,
+    telemetry,
+    ...rest
+  } = entry;
+
+  const lines = [];
+  lines.push(`Timestamp: ${timestamp ?? 'Unknown'}`);
+  const requestLine = [method ?? 'UNKNOWN', requestPath ?? ''].filter(Boolean).join(' ');
+  lines.push(`Request: ${requestLine || 'Unavailable'}`);
+  lines.push(`Hashed IP: ${hashedIp ?? 'Unavailable'}`);
+  lines.push('Selected Headers:');
+  lines.push(indentBlock(JSON.stringify(headers ?? {}, null, 2)));
+  lines.push('Parsed User Agent:');
+  lines.push(indentBlock(JSON.stringify(userAgent ?? {}, null, 2)));
+
+  if (event) {
+    lines.push(`Event: ${event}`);
+  }
+
+  if (telemetry) {
+    lines.push('Telemetry Snapshot:');
+    lines.push(indentBlock(JSON.stringify(telemetry, null, 2)));
+  }
+
+  const remaining = Object.keys(rest).length > 0 ? rest : null;
+  if (remaining) {
+    lines.push('Additional Fields:');
+    lines.push(indentBlock(JSON.stringify(remaining, null, 2)));
+  }
+
+  lines.push('-----');
+  return lines.join('\n') + '\n';
+}
+
 function sanitizeUAResult(result) {
   const { browser, engine, os, device, cpu } = result;
   return {
@@ -227,12 +277,21 @@ async function persistLog(entry) {
 
   await logDirReadyPromise;
   const now = new Date();
-  const fileName = `visits-${now.toISOString().slice(0, 10)}.jsonl`;
-  const filePath = path.join(LOG_DIR, fileName);
+  const dateStamp = now.toISOString().slice(0, 10);
+  const jsonlPath = path.join(LOG_DIR, `visits-${dateStamp}.jsonl`);
+  const textPath = path.join(LOG_DIR, `visits-${dateStamp}.txt`);
+
   try {
-    await fs.appendFile(filePath, line, 'utf8');
+    await fs.appendFile(jsonlPath, line, 'utf8');
   } catch (error) {
-    console.error('Failed to append visit log:', error);
+    console.error('Failed to append visit log (jsonl):', error);
+  }
+
+  try {
+    const formatted = formatTextLogEntry(entry);
+    await fs.appendFile(textPath, formatted, 'utf8');
+  } catch (error) {
+    console.error('Failed to append visit log (text):', error);
   }
 }
 
